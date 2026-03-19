@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KENT - Clan Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --gold: #ffd700; 
+            --bg: #0a0a0a; 
+            --card: #151515; 
+            --red: #ff4444; 
+            --junior-grad: linear-gradient(-45deg, #333, #666, #333);
+            --local-grad: linear-gradient(-45deg, #1a4a1a, #2ecc71, #1a4a1a);
+            --senior-grad: linear-gradient(-45deg, #1a2a6c, #b21f1f, #fdbb2d);
+            --mod-grad: linear-gradient(-45deg, #00c6ff, #0072ff, #00c6ff);
+            --leader-grad: linear-gradient(-45deg, #ff0000, #ffd700, #ff0000, #ffd700);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; user-select: none; }
+        body { background: var(--bg); color: white; min-height: 100vh; overflow-x: hidden; }
+        
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .role-banner {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            background-size: 300% 300%;
+            animation: gradientFlow 3s ease infinite;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .role-junior { background-image: var(--junior-grad); }
+        .role-local { background-image: var(--local-grad); }
+        .role-senior { background-image: var(--senior-grad); }
+        .role-mod { background-image: var(--mod-grad); }
+        .role-leader { background-image: var(--leader-grad); color: black; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(0,0,0,0.9); border-bottom: 1px solid var(--gold); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .logo { font-weight: 900; letter-spacing: 4px; color: var(--gold); font-size: 24px; }
+        
+        .btn-gold { border: 2px solid var(--gold); color: var(--gold); padding: 8px 16px; background: transparent; cursor: pointer; font-weight: 700; text-transform: uppercase; border-radius: 4px; transition: 0.3s; font-size: 11px; margin-left: 5px; }
+        .btn-gold:hover { background: var(--gold); color: black; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        .btn-danger { border-color: var(--red); color: var(--red); }
+
+        .hero { padding: 60px 5%; text-align: center; }
+        
+        .statut-container { max-width: 900px; margin: 40px auto; padding: 40px; background: #111; border: 1px solid #222; border-radius: 20px; text-align: left; }
+        .statut-header { color: var(--gold); font-weight: 900; font-size: 28px; text-align: center; margin-bottom: 30px; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+        .statut-section { margin-bottom: 25px; }
+        .statut-section h3 { color: var(--gold); margin-bottom: 10px; text-transform: uppercase; font-size: 18px; }
+        .statut-section li { font-size: 14px; color: #ccc; margin-bottom: 5px; list-style: none; line-height: 1.6; }
+
+        .profile-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 30px; text-align: center; }
+        .avatar-container { width: 120px; height: 120px; margin: 0 auto 15px; border-radius: 50%; border: 3px solid var(--gold); overflow: hidden; background: #222; }
+        .avatar-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card); padding: 30px; border-radius: 12px; border: 1px solid var(--gold); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; font-size: 14px; }
+        
+        .star-rating { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .star { font-size: 45px; cursor: pointer; color: #333; transition: 0.3s; }
+        .star.active { color: var(--gold); transform: scale(1.2); text-shadow: 0 0 15px var(--gold); }
+
+        .user-card, .report-card { background: #1a1a1a; border-radius: 10px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; }
+        .user-card { display: flex; align-items: center; gap: 20px; }
+        .report-card { border-left: 4px solid var(--gold); display: flex; flex-direction: column; gap: 10px; }
+        .mini-ava { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; }
+
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .welcome-box { text-align: center; animation: zoomIn 0.5s ease; }
+        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <header>
+        <div class="logo">KENT</div>
+        <div id="nav-btns" style="display:none;">
+            <button class="btn-gold" id="admin-view-reports" style="display:none;" onclick="openModal('modal-all-reports')">Звіти</button>
+            <button class="btn-gold" id="admin-req-btn" style="display:none;" onclick="openModal('modal-requests')">Заявки</button>
+            <button class="btn-gold" onclick="openModal('modal-report')">Подати Звіт</button>
+            <button class="btn-gold" onclick="openModal('modal-staff')">Склад</button>
+            <button class="btn-gold" onclick="openModal('modal-profile')">Профіль</button>
+        </div>
+    </header>
+
+    <main class="hero">
+        <h1 style="font-size: 45px; font-weight: 900; text-transform: uppercase;"><span id="display-name" style="color:var(--gold)">ГІСТЬ</span></h1>
+        <div id="display-role" style="margin-top:20px;"></div>
+
+        <div class="statut-container">
+            <div class="statut-header">Статут клану KENT</div>
+            <div class="statut-section">
+                <h3>Загальні положення</h3>
+                <li>1.1. Клан KENT є організованим об’єднанням гравців у Ukraine GTA RP.</li>
+                <li>1.2. Основною метою клану є розвиток, домінування, взаємодопомога та отримання задоволення від гри.</li>
+                <li>1.3. Кожен учасник клану зобов’язаний дотримуватись цього статуту.</li>
+            </div>
+            <div class="statut-section">
+                <h3>Ієрархія клану</h3>
+                <li>2.1. Лідер (Boss) – керує кланом, приймає ключові рішення.</li>
+                <li>2.2. Модератор (Moderator) – допомагають лідеру, контролюють склад.</li>
+                <li>2.3. Старший (Senior) – відповідають за дисципліну та організацію активностей.</li>
+                <li>2.4. Місцевий (Local) – основний склад клану.</li>
+                <li>2.5. Молодший (Younger) – нові гравці на випробувальному терміні.</li>
+            </div>
+            <div class="statut-section">
+                <h3>Обов’язки учасників</h3>
+                <li>3.1. Дотримуватись правил сервера Ukraine GTA RP.</li>
+                <li>3.2. Поважати інших гравців та членів клану.</li>
+                <li>3.3. Брати участь у кланових заходах (капти, війни, івенти, блокпости, викрадення).</li>
+                <li>3.4. Виконувати накази старших за рангом.</li>
+                <li>3.5. Повідомляти про свою відсутність.</li>
+            </div>
+            <div class="statut-section">
+                <h3>Заборонено</h3>
+                <li>4.1. Ображати членів клану або союзників.</li>
+                <li>4.2. Порушувати правила сервера.</li>
+                <li>4.3. Зливати інформацію про клан.</li>
+                <li>4.4. Грати проти свого клану.</li>
+                <li>4.5. Ігнорувати накази керівництва.</li>
+                <li>4.6. Брати ТЗ Клану та залишати авто (Зломаним ,не заправленим).</li>
+            </div>
+            <div class="statut-section">
+                <h3>Права учасників</h3>
+                <li>5.1. Отримувати допомогу від клану.</li>
+                <li>5.2. Брати участь у всіх активностях.</li>
+                <li>5.3. Пропонувати ідеї щодо розвитку клану.</li>
+                <li>5.4. Отримувати підвищення за активність.</li>
+            </div>
+            <div class="statut-section">
+                <h3>Покарання</h3>
+                <li>6.1. Попередження.</li>
+                <li>6.2. Пониження в ранзі.</li>
+                <li>6.3. Тимчасове відсторонення.</li>
+                <li>6.4. Виключення з клану.</li>
+            </div>
+            <div class="statut-section">
+                <h3>Заключні положення</h3>
+                <li>7.1. Лідер має право змінювати статут.</li>
+                <li>7.2. Статут набирає чинності з моменту публікації.</li>
+                <li>7.3. Незнання правил не звільняє від відповідальності.</li>
+                <li>7.4. За порушення статута отримає покарання ввигляді (виключення,пониженя,попередженя,дагана).</li>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-welcome" class="modal">
+        <div class="modal-content welcome-box">
+            <h1 style="color:var(--gold); margin-bottom:20px;">ВІТАЄМО!</h1>
+            <p style="color:#888; font-size:12px; margin-bottom:25px;">Всі дані вашого акаунту є конфіденційними.</p>
+            <button class="btn-gold" style="width:100%;" onclick="closeModal('modal-welcome')">ЗРОЗУМІЛО</button>
+        </div>
+    </div>
+
+    <div id="modal-profile" class="modal">
+        <div class="modal-content">
+            <div class="profile-card">
+                <div class="avatar-container">
+                    <img id="prof-img" src="https://i.imgur.com/6VBx3io.png">
+                </div>
+                <h2 id="prof-nick" style="color:var(--gold); margin-bottom:10px;"></h2>
+                <div id="prof-banner-box" style="margin-bottom:15px;"></div>
+                
+                <div style="margin-top:20px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-gold" onclick="document.getElementById('avatar-input').click()">ЗМІНИТИ АВАТАР</button>
+                    <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                    <button class="btn-gold" onclick="closeModal('modal-profile')">ЗАКРИТИ</button>
+                    <button class="btn-gold btn-danger" onclick="logout()">ВИЙТИ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-staff" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 style="color:var(--gold); margin-bottom:20px; text-align: center;">СКЛАД КЛАНУ</h2>
+            <div id="staff-list"></div>
+            <button class="btn-gold" style="width:100%; margin-top:15px;" onclick="closeModal('modal-staff')">ЗАКРИТИ</button>
+        </div>
+    </div>
+
+    <div id="modal-all-reports" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 style="color:var(--gold); margin-bottom:20px; text-align: center;">ЖУРНАЛ ЗВІТІВ</h2>
+            <div id="all-reports-list"></div>
+            <button class="btn-gold" style="width:100%; margin-top:15px;" onclick="closeModal('modal-all-reports')">ЗАКРИТИ</button>
+        </div>
+    </div>
+
+    <div id="modal-requests" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--gold); margin-bottom:20px;">ЗАЯВКИ</h2>
+            <div id="requests-list"></div>
+            <button class="btn-gold" style="width:100%; margin-top:15px;" onclick="closeModal('modal-requests')">ЗАКРИТИ</button>
+        </div>
+    </div>
+
+    <div id="modal-report" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--gold); text-align:center; margin-bottom:20px;">НОВИЙ ЗВІТ</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-gold" onclick="initReport('алко')">АЛКОГОЛЬ</button>
+                <button class="btn-gold" onclick="initReport('петрушка')">ПЕТРУШКА</button>
+            </div>
+            <div id="calc-section" style="display:none; margin-top:20px;">
+                <div class="star-rating" id="star-box">
+                    <span class="star" data-v="1" onclick="setStars(1)">★</span>
+                    <span class="star" data-v="2" onclick="setStars(2)">★</span>
+                    <span class="star" data-v="3" onclick="setStars(3)">★</span>
+                </div>
+                <div id="clean-bottle-wrap" style="display:none; margin-bottom:15px; text-align:center;">
+                    <label style="cursor:pointer;"><input type="checkbox" id="check-clean" onchange="doCalc()"> ЧИСТА ПЛЯШКА (1000/шт)</label>
+                </div>
+                <input type="number" id="rep-count" placeholder="Кількість (шт)" oninput="doCalc()">
+                <div style="text-align:center; padding:15px; font-weight:900; font-size:20px;">СУМА: <span id="rep-total" style="color:var(--gold)">0</span> грн</div>
+                <button class="btn-gold" style="width:100%; padding:15px;" onclick="submitReport()">НАДІСЛАТИ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-screen">
+        <div class="modal-content" style="text-align:center;">
+            <h2 style="color:var(--gold); letter-spacing:3px; margin-bottom:20px;">KENT SYSTEM</h2>
+            <input id="auth-nick" placeholder="Ваш нікнейм">
+            <input id="auth-pass" type="password" placeholder="Пароль">
+            <button class="btn-gold" style="width:100%; padding:14px;" onclick="login()">УВІЙТИ</button>
+            <p style="margin-top:20px; font-size:11px; opacity:0.5; cursor:pointer;" onclick="register()">ПОДАТИ ЗАЯВКУ НА ВСТУП</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, remove, update, push } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+        // ЗАХИСТ ВІД КОПІЮВАННЯ / КОНСОЛІ
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+            if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0))) return false;
+        };
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP5j40QaaDJKIO_diIEfuR-1YTG8xFIxE",
+            authDomain: "huivzope.firebaseapp.com",
+            databaseURL: "https://huivzope-default-rtdb.firebaseio.com",
+            projectId: "huivzope",
+            storageBucket: "huivzope.firebasestorage.app",
+            messagingSenderId: "48001089859",
+            appId: "1:48001089859:web:4827449a191eb58769aff6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const curUser = localStorage.getItem('clan_user');
+
+        const ROLE_DATA = {
+            'junior': { n: 'Молодший', p: 1, c: 'role-junior' },
+            'local': { n: 'Місцевий', p: 2, c: 'role-local' },
+            'senior': { n: 'Старший', p: 3, c: 'role-senior' },
+            'mod': { n: 'Модератор', p: 4, c: 'role-mod' },
+            'leader': { n: 'Лідер', p: 5, c: 'role-leader' }
+        };
+
+        let repState = { type: '', stars: 1 };
+        let userData = null;
+
+        window.login = async () => {
+            const n = document.getElementById('auth-nick').value.trim();
+            const p = document.getElementById('auth-pass').value.trim();
+            const s = await get(ref(db, 'staff/' + n));
+            if(s.exists() && String(s.val().password) === String(p)) {
+                localStorage.setItem('clan_user', n);
+                if(!localStorage.getItem('welcomed_' + n)) {
+                    localStorage.setItem('show_welcome', 'true');
+                    localStorage.setItem('welcomed_' + n, 'true');
+                }
+                location.reload();
+            } else alert("Помилка входу!");
+        };
+
+        window.register = async () => {
+            const n = document.getElementById('auth-nick').value.trim();
+            const p = document.getElementById('auth-pass').value.trim();
+            if(!n || !p) return alert("Заповніть поля!");
+            await set(ref(db, 'requests/' + n), { nickname: n, password: p });
+            alert("Заявка на розгляді!");
+        };
+
+        if(curUser) {
+            onValue(ref(db, 'staff/' + curUser), s => {
+                userData = s.val();
+                if(!userData) return logout();
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('nav-btns').style.display = 'flex';
+                document.getElementById('display-name').innerText = userData.nickname;
+                document.getElementById('display-role').innerHTML = `<div class="role-banner ${ROLE_DATA[userData.role].c}">${ROLE_DATA[userData.role].n}</div>`;
+                document.getElementById('prof-nick').innerText = userData.nickname;
+                document.getElementById('prof-banner-box').innerHTML = `<div class="role-banner ${ROLE_DATA[userData.role].c}">${ROLE_DATA[userData.role].n}</div>`;
+                if(userData.avatar) document.getElementById('prof-img').src = userData.avatar;
+                
+                if(ROLE_DATA[userData.role].p >= 4) {
+                    document.getElementById('admin-req-btn').style.display = 'block';
+                    document.getElementById('admin-view-reports').style.display = 'block';
+                }
+                if(localStorage.getItem('show_welcome') === 'true') {
+                    openModal('modal-welcome');
+                    localStorage.removeItem('show_welcome');
+                }
+            });
+        }
+
+        onValue(ref(db, 'staff'), s => {
+            const cont = document.getElementById('staff-list');
+            cont.innerHTML = "";
+            const members = Object.entries(s.val() || {}).sort((a,b)=>ROLE_DATA[b[1].role].p - ROLE_DATA[a[1].role].p);
+            members.forEach(([id, u]) => {
+                const isAdmin = ROLE_DATA[userData?.role]?.p >= 4;
+                const canEdit = isAdmin && (id !== curUser) && (ROLE_DATA[userData.role].p > ROLE_DATA[u.role].p);
+                
+                let roleDisp = `<div class="role-banner ${ROLE_DATA[u.role].c}">${ROLE_DATA[u.role].n}</div>`;
+                if(canEdit) {
+                    let opts = "";
+                    Object.entries(ROLE_DATA).forEach(([rk, rv]) => {
+                        if(ROLE_DATA[userData.role].p > rv.p) {
+                            opts += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${rv.n}</option>`;
+                        }
+                    });
+                    roleDisp = `<select onchange="changeRole('${id}', this.value)" style="margin:0; width:auto; padding:5px;">${opts}</select>`;
+                }
+
+                cont.innerHTML += `
+                    <div class="user-card">
+                        <img src="${u.avatar || 'https://i.imgur.com/6VBx3io.png'}" class="mini-ava">
+                        <div style="flex:1">
+                            <b style="font-size:16px;">${u.nickname}</b><br>${roleDisp}
+                        </div>
+                    </div>`;
+            });
+        });
+
+        window.changeRole = (id, r) => {
+            if (id === curUser) return alert("Ви не можете змінити роль самому собі!");
+            if (ROLE_DATA[r].p >= ROLE_DATA[userData.role].p) return alert("Ви не можете ставити роль вище або рівну своїй!");
+            update(ref(db, 'staff/'+id), { role: r });
+        };
+
+        onValue(ref(db, 'requests'), s => {
+            const cont = document.getElementById('requests-list');
+            cont.innerHTML = "";
+            Object.entries(s.val() || {}).forEach(([id, d]) => {
+                let opts = "";
+                Object.entries(ROLE_DATA).forEach(([rk, rv]) => {
+                    if(ROLE_DATA[userData.role].p > rv.p) {
+                        opts += `<option value="${rk}">${rv.n}</option>`;
+                    }
+                });
+                cont.innerHTML += `<div class="user-card" style="flex-direction:column; align-items:flex-start;">
+                    <b>${id}</b>
+                    <select id="req-r-${id}">${opts}</select>
+                    <div style="display:flex; gap:10px; width:100%;">
+                        <button class="btn-gold" style="flex:1" onclick="approve('${id}')">ПРИЙНЯТИ</button>
+                        <button class="btn-gold btn-danger" style="flex:1" onclick="reject('${id}')">✖</button>
+                    </div>
+                </div>`;
+            });
+        });
+
+        window.approve = async (id) => {
+            const r = document.getElementById('req-r-'+id).value;
+            const s = await get(ref(db, 'requests/'+id));
+            await set(ref(db, 'staff/'+id), { ...s.val(), role: r });
+            await remove(ref(db, 'requests/'+id));
+        };
+        window.reject = (id) => remove(ref(db, 'requests/'+id));
+
+        window.initReport = (t) => { 
+            repState.type = t; 
+            document.getElementById('calc-section').style.display='block'; 
+            document.getElementById('clean-bottle-wrap').style.display = t === 'алко' ? 'block' : 'none';
+            setStars(1); 
+        };
+        window.setStars = (v) => { 
+            repState.stars = v; 
+            document.querySelectorAll('.star').forEach(s=>s.classList.toggle('active', s.dataset.v <= v)); 
+            doCalc(); 
+        };
+        window.doCalc = () => {
+            const c = parseInt(document.getElementById('rep-count').value) || 0;
+            const clean = document.getElementById('check-clean').checked;
+            let p = [500, 1200, 1300][repState.stars-1];
+            if(repState.type === 'алко' && clean) p = 1000;
+            document.getElementById('rep-total').innerText = (c * p).toLocaleString();
+        };
+        window.submitReport = async () => {
+            const c = document.getElementById('rep-count').value;
+            if(!c || c <= 0) return alert("Введіть кількість!");
+            const data = { 
+                nick: userData.nickname, 
+                role: userData.role, 
+                avatar: userData.avatar || '',
+                type: repState.type, 
+                stars: repState.stars, 
+                count: c,
+                total: document.getElementById('rep-total').innerText, 
+                time: new Date().toLocaleString('uk-UA') 
+            };
+            await push(ref(db, 'reports'), data);
+            closeModal('modal-report');
+            alert("Звіт надіслано!");
+        };
+
+        onValue(ref(db, 'reports'), s => {
+            const cont = document.getElementById('all-reports-list');
+            cont.innerHTML = "";
+            const reports = s.val() ? Object.values(s.val()).reverse() : [];
+            reports.forEach(r => {
+                cont.innerHTML += `<div class="report-card">
+                    <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid #333; padding-bottom:10px;">
+                        <img src="${r.avatar || 'https://i.imgur.com/6VBx3io.png'}" class="mini-ava">
+                        <div><b>${r.nick}</b><br><div class="role-banner ${ROLE_DATA[r.role].c}" style="font-size:8px; padding:2px 5px;">${ROLE_DATA[r.role].n}</div></div>
+                        <div style="margin-left:auto; font-size:10px; opacity:0.5;">${r.time}</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px;">
+                        <span>Тип: ${r.type.toUpperCase()}</span>
+                        <span>Якість: ${'★'.repeat(r.stars)}</span>
+                        <span>К-сть: ${r.count} шт</span>
+                        <span style="color:var(--gold); font-weight:900;">Сума: ${r.total} грн</span>
+                    </div>
+                </div>`;
+            });
+        });
+
+        window.uploadAvatar = (input) => {
+            const reader = new FileReader();
+            reader.onload = (e) => update(ref(db, 'staff/'+curUser), { avatar: e.target.result });
+            reader.readAsDataURL(input.files[0]);
+        };
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => { 
+            document.getElementById(id).style.display = 'none';
+            if(id === 'modal-report') {
+                document.getElementById('calc-section').style.display = 'none';
+                document.getElementById('rep-count').value = '';
+                document.getElementById('check-clean').checked = false;
+            }
+        };
+        window.logout = () => { localStorage.clear(); location.reload(); };
+        window.onclick = (e) => { if(e.target.classList.contains('modal')) closeModal(e.target.id); };
+    </script>
+</body>
+</html>
